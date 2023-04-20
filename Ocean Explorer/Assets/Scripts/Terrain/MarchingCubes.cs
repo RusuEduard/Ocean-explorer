@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class MarchingCubes : MonoBehaviour
@@ -8,14 +9,28 @@ public class MarchingCubes : MonoBehaviour
 
     MeshFilter meshFilter;
 
-    int width = 32;
-    int height = 32;
-    float terrainHeight = 0f;
+    //BEST VALUES FOR Density Scale = 0.05
+    //Terrain Height = 0.579
+
+    int width = 64;
+    int height = 64;
+
+    [SerializeField]
+    [Range(0, 1)]
+    float terrainHeight = 0.6f;
+
+    [SerializeField]
+    float densityScale = 0.05f;
+    [SerializeField]
+    Material material;
 
     float[,,] terrainMap;
 
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
+
+    List<GameObject> allGameObjects = new List<GameObject>();
+    List<Mesh> allMeshes = new List<Mesh>();
 
     private void Start()
     {
@@ -24,6 +39,15 @@ public class MarchingCubes : MonoBehaviour
         PopulateTerrainMap();
         CreateMeshData();
 
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            PopulateTerrainMap();
+            CreateMeshData();
+        }
     }
 
     void CreateMeshData()
@@ -71,18 +95,9 @@ public class MarchingCubes : MonoBehaviour
             {
                 for (int y = 0; y < height + 1; y++)
                 {
-					Vector3 ws = new Vector3(x, y, z);
+                    Vector3 ws = new Vector3(x * this.densityScale, y * this.densityScale, z * this.densityScale);
                     // Get a terrain height using regular old Perlin noise.
-                    float density = -ws.y;
-					density += PerlinNoise3D(ws / 16) * 16;
-					density += PerlinNoise3D(ws / 8) * 8;
-					density += PerlinNoise3D(ws / 4) * 4;
-					density += PerlinNoise3D(ws / 2) * 2;
-					density += PerlinNoise3D(ws);
-					density += PerlinNoise3D(ws * 2) / 2;
-					density += PerlinNoise3D(ws * 4) / 4;
-					density += PerlinNoise3D(ws * 8) / 8;
-					density += PerlinNoise3D(ws * 16) / 16;
+                    var density = PerlinNoise3D(ws);
 
                     // Set the value of this point in the terrainMap.
                     terrainMap[x, y, z] = density;
@@ -164,17 +179,39 @@ public class MarchingCubes : MonoBehaviour
 
         vertices.Clear();
         triangles.Clear();
+        foreach (var gameObj in this.allGameObjects)
+        {
+            Destroy(gameObj);
+        }
+        foreach (var mesh in this.allMeshes)
+        {
+            Destroy(mesh);
+        }
+        this.allGameObjects.Clear();
+        this.allMeshes.Clear();
 
     }
 
     void BuildMesh()
     {
-
-        Mesh mesh = new Mesh();
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals();
-        meshFilter.mesh = mesh;
+        int requiredMeshes = this.vertices.Count / 65535 + (this.vertices.Count % 65535 == 0 ? 0 : 1);
+        for (int i = 0; i < requiredMeshes; i++)
+        {
+            Mesh mesh = new Mesh();
+            mesh.vertices = this.vertices.GetRange(i * 65535, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
+            mesh.triangles = Enumerable.Range(0, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
+            mesh.RecalculateNormals();
+            this.allMeshes.Add(mesh);
+        }
+        foreach (var mesh in this.allMeshes)
+        {
+            GameObject g = new GameObject();
+            MeshFilter mf = g.AddComponent<MeshFilter>();//add mesh component
+            MeshRenderer mr = g.AddComponent<MeshRenderer>();//add mesh renderer component
+            mr.material = material;//set material to avoid evil pinkness of missing texture
+            mf.mesh = mesh;
+            this.allGameObjects.Add(g);
+        }
 
     }
 
@@ -469,22 +506,23 @@ public class MarchingCubes : MonoBehaviour
 
     };
 
- public static float PerlinNoise3D(Vector3 ws)
- {
-     ws.y += 1;
-     ws.z += 2;
-     float xy = _perlin3DFixed(ws.x, ws.y);
-     float xz = _perlin3DFixed(ws.x, ws.z);
-     float yz = _perlin3DFixed(ws.y, ws.z);
-     float yx = _perlin3DFixed(ws.y, ws.x);
-     float zx = _perlin3DFixed(ws.z, ws.x);
-     float zy = _perlin3DFixed(ws.z, ws.y);
-     return xy * xz * yz * yx * zx * zy;
- }
+    public static float PerlinNoise3D(Vector3 ws)
+    {
+        ws.y += 1;
+        ws.z += 2;
+        float xy = _perlin3DFixed(ws.x, ws.y);
+        float xz = _perlin3DFixed(ws.x, ws.z);
+        float yz = _perlin3DFixed(ws.y, ws.z);
+        float yx = _perlin3DFixed(ws.y, ws.x);
+        float zx = _perlin3DFixed(ws.z, ws.x);
+        float zy = _perlin3DFixed(ws.z, ws.y);
+        return xy * xz * yz * yx * zx * zy;
+    }
 
     static float _perlin3DFixed(float a, float b)
     {
-        return Mathf.Sin(Mathf.PI * Mathf.PerlinNoise(a + 0.1f, b + 0.1f));
+        return Mathf.Sin(Mathf.PI * Mathf.PerlinNoise(a, b));
     }
 
 }
+
