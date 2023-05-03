@@ -152,7 +152,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0.7
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -248,6 +248,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb82bed24cbdcc4d863dc268b19e41c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  terrainHeight: 0
+  densityScale: 2
+  material: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  octaves: 10
+  worldYmax: 10
 --- !u!4 &824521319
 Transform:
   m_ObjectHideFlags: 0
@@ -283,7 +288,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 49c3c02661a83fd42b33859cfbf9a17d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -389,11 +394,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.07768308, y: -0, z: -0, w: 0.9969781}
-  m_LocalPosition: {x: 16, y: 13.28, z: -18.04}
+  m_LocalRotation: {x: 0.12809768, y: -0, z: -0, w: 0.99176157}
+  m_LocalPosition: {x: 69.64, y: 53.08, z: -54.77}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 8.911, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 14.719, y: 0, z: 0}

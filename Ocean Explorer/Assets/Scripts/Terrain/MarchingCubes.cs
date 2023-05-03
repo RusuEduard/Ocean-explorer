@@ -24,7 +24,13 @@ public class MarchingCubes : MonoBehaviour
     [SerializeField]
     Material material;
 
+    public int octaves = 2;
+    public float worldYmax = 2f;
     float[,,] terrainMap;
+
+    public float yOffset;
+
+    public Vector3 offset;
 
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
@@ -45,8 +51,10 @@ public class MarchingCubes : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.G))
         {
+            Debug.Log("Generating");
             PopulateTerrainMap();
             CreateMeshData();
+            Debug.Log("Generated");
         }
     }
 
@@ -84,6 +92,59 @@ public class MarchingCubes : MonoBehaviour
 
     }
 
+    float GetDensity(float x, float y, float z)
+    {
+        if (y == 0) {
+            return 1;
+        }
+
+        if(x == 0 || z == 0 || x == width || z == width) {
+            return -1;
+        }
+
+        float density = 0;
+        float perlinValue = 0;
+
+        float sampleX = x / this.densityScale + offset.x;
+        float sampleY = y / this.densityScale + offset.y;
+        float sampleZ = z / this.densityScale + offset.z;
+
+        float perlinHeight = PerlinNoise3D(sampleX / 10, 0, sampleZ / 10);
+
+        perlinValue = PerlinNoise3D(sampleX / 10, sampleY / 10, sampleZ / 10);
+
+        for (int i = 2; i < octaves; i++)
+        {
+            perlinHeight += PerlinNoise3D(sampleX / (i * 5), 0, sampleZ / (i * 5)) * i / octaves;
+            perlinValue -= PerlinNoise3D(sampleX / i, sampleY / i, sampleZ / i) * i / octaves;
+        }
+
+        float mm = PerlinNoise3D((sampleX - 3.45f) / 50, 23 / 50, (sampleZ + 20.234f) / 50);
+        float caveX = (sampleX / 2 - 523.234f);
+        float caveY = (sampleY - 2.334f);
+        float caveZ = (sampleZ / 2 + 2023.234f);
+
+        float caves = PerlinNoise3D(caveX / 5, caveY / 5, caveZ / 5);
+
+        for (int i = 2; i < octaves; i++)
+        {
+            caves += PerlinNoise3D(caveX / (i * 2), caveY / (i * 2), caveZ / (i * 2)) * i / octaves;
+        }
+
+
+        if (Mathf.Abs(Mathf.Floor(caves * 50)) - 30 > 0)
+        {
+            caves = Mathf.Abs(caves * 10);
+        }
+        else
+        {
+            caves *= 0;
+        }
+
+        density = -sampleY + (perlinValue / 2 + perlinHeight) * worldYmax * mm - caves * Mathf.Abs(mm) + yOffset;
+        return density;
+    }
+
     void PopulateTerrainMap()
     {
 
@@ -95,13 +156,9 @@ public class MarchingCubes : MonoBehaviour
             {
                 for (int y = 0; y < height + 1; y++)
                 {
-                    Vector3 ws = new Vector3(x * this.densityScale, y * this.densityScale, z * this.densityScale);
-                    // Get a terrain height using regular old Perlin noise.
-                    var density = PerlinNoise3D(ws);
-
-                    // Set the value of this point in the terrainMap.
-                    terrainMap[x, y, z] = density;
-
+                    {
+                        terrainMap[x, y, z] = this.GetDensity(x, y, z);
+                    }
                 }
             }
         }
@@ -198,8 +255,15 @@ public class MarchingCubes : MonoBehaviour
         for (int i = 0; i < requiredMeshes; i++)
         {
             Mesh mesh = new Mesh();
-            mesh.vertices = this.vertices.GetRange(i * 65535, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
+            var meshVertices = this.vertices.GetRange(i * 65535, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
+            var uvs = new Vector2[meshVertices.Length];
+            for (int j = 0; j < uvs.Length; j++)
+            {
+                uvs[j] = new Vector2(meshVertices[j].x, meshVertices[j].z);
+            }
+            mesh.vertices = meshVertices;
             mesh.triangles = Enumerable.Range(0, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
+            mesh.uv = uvs;
             mesh.RecalculateNormals();
             this.allMeshes.Add(mesh);
         }
@@ -506,16 +570,16 @@ public class MarchingCubes : MonoBehaviour
 
     };
 
-    public static float PerlinNoise3D(Vector3 ws)
+    public static float PerlinNoise3D(float x, float y, float z)
     {
-        ws.y += 1;
-        ws.z += 2;
-        float xy = _perlin3DFixed(ws.x, ws.y);
-        float xz = _perlin3DFixed(ws.x, ws.z);
-        float yz = _perlin3DFixed(ws.y, ws.z);
-        float yx = _perlin3DFixed(ws.y, ws.x);
-        float zx = _perlin3DFixed(ws.z, ws.x);
-        float zy = _perlin3DFixed(ws.z, ws.y);
+        y += 1;
+        z += 2;
+        float xy = _perlin3DFixed(x, y);
+        float xz = _perlin3DFixed(x, z);
+        float yz = _perlin3DFixed(y, z);
+        float yx = _perlin3DFixed(y, x);
+        float zx = _perlin3DFixed(z, x);
+        float zy = _perlin3DFixed(z, y);
         return xy * xz * yz * yx * zx * zy;
     }
 
