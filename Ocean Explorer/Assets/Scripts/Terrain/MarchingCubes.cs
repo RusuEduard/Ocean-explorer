@@ -32,6 +32,11 @@ public class MarchingCubes : MonoBehaviour
 
     public Vector3 offset;
 
+    public Gradient gradient;
+
+    float minTerrainHeight = float.MaxValue;
+    float maxTerrainHeight = float.MinValue;
+
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
 
@@ -94,11 +99,13 @@ public class MarchingCubes : MonoBehaviour
 
     float GetDensity(float x, float y, float z)
     {
-        if (y == 0) {
+        if (y == 0)
+        {
             return 1;
         }
 
-        if(x == 0 || z == 0 || x == width || z == width) {
+        if (x == 0 || z == 0 || x == width || z == width)
+        {
             return -1;
         }
 
@@ -200,14 +207,20 @@ public class MarchingCubes : MonoBehaviour
                 newPosition.x = vert1.x + mu * (vert2.x - vert1.x);
                 newPosition.y = vert1.y + mu * (vert2.y - vert1.y);
                 newPosition.z = vert1.z + mu * (vert2.z - vert1.z);
-                // Get the midpoint of this edge.
-                Vector3 vertPosition = (vert1 + vert2) / 2f;
 
                 // Add to our vertices and triangles list and incremement the edgeIndex.
                 vertices.Add(newPosition);
                 triangles.Add(vertices.Count - 1);
                 edgeIndex++;
 
+                if (newPosition.y > this.maxTerrainHeight)
+                {
+                    this.maxTerrainHeight = newPosition.y;
+                }
+                if (newPosition.y < this.minTerrainHeight)
+                {
+                    this.minTerrainHeight = newPosition.y;
+                }
             }
         }
     }
@@ -256,24 +269,27 @@ public class MarchingCubes : MonoBehaviour
         {
             Mesh mesh = new Mesh();
             var meshVertices = this.vertices.GetRange(i * 65535, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
-            var uvs = new Vector2[meshVertices.Length];
-            for (int j = 0; j < uvs.Length; j++)
+            var colors = new Color[meshVertices.Length];
+            for (int j = 0; j < colors.Length; j++)
             {
-                uvs[j] = new Vector2(meshVertices[j].x, meshVertices[j].z);
+                float height = Mathf.InverseLerp(minTerrainHeight, maxTerrainHeight, meshVertices[j].y);
+                colors[j] = gradient.Evaluate(height);
             }
             mesh.vertices = meshVertices;
             mesh.triangles = Enumerable.Range(0, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
-            mesh.uv = uvs;
+            mesh.colors = colors;
             mesh.RecalculateNormals();
             this.allMeshes.Add(mesh);
         }
         foreach (var mesh in this.allMeshes)
         {
-            GameObject g = new GameObject();
+            GameObject g = new GameObject("Terrain");
             MeshFilter mf = g.AddComponent<MeshFilter>();//add mesh component
             MeshRenderer mr = g.AddComponent<MeshRenderer>();//add mesh renderer component
+            MeshCollider mc = g.AddComponent<MeshCollider>();
             mr.material = material;//set material to avoid evil pinkness of missing texture
             mf.mesh = mesh;
+            mc.sharedMesh = mesh;
             this.allGameObjects.Add(g);
         }
 

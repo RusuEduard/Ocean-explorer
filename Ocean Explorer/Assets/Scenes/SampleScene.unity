@@ -253,6 +253,8 @@ MonoBehaviour:
   material: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   octaves: 10
   worldYmax: 10
+  yOffset: 7
+  offset: {x: 0, y: 0, z: 0}
 --- !u!4 &824521319
 Transform:
   m_ObjectHideFlags: 0
