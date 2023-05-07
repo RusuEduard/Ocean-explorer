@@ -6,6 +6,7 @@ public class BoidManager : MonoBehaviour
 {
 
     public BoidSettings settings;
+    public Transform target;
     Boid[] boids;
 
     void Start()
@@ -13,7 +14,7 @@ public class BoidManager : MonoBehaviour
         boids = FindObjectsOfType<Boid>();
         foreach (Boid b in boids)
         {
-            b.Initialize(settings);
+            b.Initialize(settings, target);
         }
     }
 

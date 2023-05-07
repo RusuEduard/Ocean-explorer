@@ -9,7 +9,7 @@ public class Boid : MonoBehaviour
     public Vector3 position;
     [HideInInspector]
     public Vector3 forward;
-    Vector3 velocity;
+    public Vector3 velocity;
 
     Vector3 acceleration;
     [HideInInspector]
@@ -24,16 +24,17 @@ public class Boid : MonoBehaviour
     Material material;
     Transform cachedTransform;
     private float currentHitDistance;
+    Transform target;
 
     void Awake()
     {
         this.cachedTransform = this.transform;
-        forward = new Vector3(0, 1, 0);
     }
 
-    public void Initialize(BoidSettings settings)
+    public void Initialize(BoidSettings settings, Transform target)
     {
         this.settings = settings;
+        this.target = target;
         position = cachedTransform.position;
         forward = cachedTransform.forward;
 
@@ -52,6 +53,12 @@ public class Boid : MonoBehaviour
     public void UpdateBoid()
     {
         Vector3 acceleration = Vector3.zero;
+
+        if (target != null)
+        {
+            Vector3 offsetToTarget = (target.position - position);
+            acceleration = SteerTowards(offsetToTarget) * settings.targetWeight;
+        }
 
         if (numPerceivedFlockmates != 0)
         {
@@ -131,11 +138,11 @@ public class Boid : MonoBehaviour
             Vector3 dir = cachedTransform.TransformDirection(rayDirections[i]);
             Ray ray = new Ray(cachedTransform.position, dir);
             // Gizmos.DrawRay(ray);
-            Debug.DrawLine(ray.origin, ray.origin + ray.direction * settings.collisionAvoidDst, Color.red);
+            // Debug.DrawLine(ray.origin, ray.origin + ray.direction * settings.collisionAvoidDst, Color.red);
         }
 
         Gizmos.color = Color.red;
-        // Debug.DrawLine(cachedTransform.position, cachedTransform.position + forward * currentHitDistance);
+        Debug.DrawLine(cachedTransform.position, cachedTransform.position + forward * currentHitDistance);
         Gizmos.DrawWireSphere(cachedTransform.position + forward * currentHitDistance, settings.boundsRadius);
     }
 }

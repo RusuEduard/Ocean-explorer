@@ -3,7 +3,7 @@ using UnityEngine;
 public static class BoidHelper
 {
 
-    const int numViewDirections = 200;
+    const int numViewDirections = 300;
     public static readonly Vector3[] directions;
 
     static BoidHelper()
