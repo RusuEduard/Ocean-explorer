@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,36 +17,41 @@ public class BoidManager : MonoBehaviour
     private int numberOfBoidsAlive;
     public Boid prefab;
 
+    public CsvWriter csvWriter;
+
     void Start()
     {
+        this.csvWriter = new CsvWriter(Application.dataPath + "/data.csv");
+        this.WriteCsvTitles();
+
         this.currentGeneration = 1;
         this.numberOfBoidsAlive = this.generationSize;
         this.boids = new Boid[generationSize];
         for (int i = 0; i < generationSize; i++)
         {
-            Vector3 pos = transform.position + Random.insideUnitSphere * 15;
+            Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 15;
             Boid boid = Instantiate(prefab);
             boid.transform.position = pos;
-            boid.transform.forward = Random.insideUnitSphere;
+            boid.transform.forward = UnityEngine.Random.insideUnitSphere;
 
-            boid.MinSpeed = Random.Range(1, 5);
-            boid.MaxSpeed = Random.Range(5, 10);
-            boid.PerceptionRadius = Random.Range(5, 10);
-            boid.AvoidanceRadius = Random.Range(5, 10);
-            boid.MaxSteerForce = Random.Range(2, 8);
-            boid.AlignWeight = Random.Range(0, 5);
-            boid.CohesionWeight = Random.Range(0, 5);
-            boid.SeparateWeight = Random.Range(0, 5);
-            boid.TargetWeight = Random.Range(0, 5);
+            boid.MinSpeed = UnityEngine.Random.Range(1, 5);
+            boid.MaxSpeed = UnityEngine.Random.Range(5, 10);
+            boid.PerceptionRadius = UnityEngine.Random.Range(5, 10);
+            boid.AvoidanceRadius = UnityEngine.Random.Range(5, 10);
+            boid.MaxSteerForce = UnityEngine.Random.Range(2, 8);
+            boid.AlignWeight = UnityEngine.Random.Range(0, 5);
+            boid.CohesionWeight = UnityEngine.Random.Range(0, 5);
+            boid.SeparateWeight = UnityEngine.Random.Range(0, 5);
+            boid.TargetWeight = UnityEngine.Random.Range(0, 5);
             boid.BoundsRadius = 0.5f;
-            boid.AvoidCollisionWeight = Random.Range(0, 5);
-            boid.CollisionAvoidDst = Random.Range(5, 15);
+            boid.AvoidCollisionWeight = UnityEngine.Random.Range(0, 5);
+            boid.CollisionAvoidDst = UnityEngine.Random.Range(5, 15);
 
             boid.Initialize();
             this.boids[i] = boid;
         }
 
-        InvokeRepeating("LogBestFitness", 30f, 30f);
+        InvokeRepeating("ExportData", 5f, 5f);
     }
 
     void Update()
@@ -88,17 +94,17 @@ public class BoidManager : MonoBehaviour
     private Boid GetOffspring(Boid parent1, Boid parent2)
     {
         var child = Instantiate(prefab);
-        Vector3 pos = transform.position + Random.insideUnitSphere * 15;
+        Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 15;
         child.transform.position = pos;
-        child.transform.forward = Random.insideUnitSphere;
+        child.transform.forward = UnityEngine.Random.insideUnitSphere;
 
         PropertyInfo[] properties = typeof(IBoid).GetProperties();
         foreach (var property in properties)
         {
-            property.SetValue(child, Random.Range(1, 100) < 50 ? property.GetValue(parent1) : property.GetValue(parent2));
-            if (Random.Range(1, 100) < 3)
+            property.SetValue(child, UnityEngine.Random.Range(1, 100) < 50 ? property.GetValue(parent1) : property.GetValue(parent2));
+            if (UnityEngine.Random.Range(1, 100) < 3)
             {
-                property.SetValue(child, (float)property.GetValue(child) + Random.Range(-3f, 3f));
+                property.SetValue(child, (float)property.GetValue(child) + UnityEngine.Random.Range(-3f, 3f));
             }
         }
         return child;
@@ -108,7 +114,7 @@ public class BoidManager : MonoBehaviour
     {
         var totalFitness = boids.Select(boid => boid.getFitness()).Sum();
 
-        int probability = Random.Range(0, totalFitness);
+        int probability = UnityEngine.Random.Range(0, totalFitness);
 
         var sum = 0;
         for (int i = 0; i < generationSize; i++)
@@ -164,8 +170,25 @@ public class BoidManager : MonoBehaviour
         }
     }
 
-    void LogBestFitness()
+    void WriteCsvTitles()
     {
-        Debug.Log(this.boids.Sum(boid => boid.getFitness()) / this.boids.Length);
+        PropertyInfo[] properties = typeof(IBoid).GetProperties();
+        this.csvWriter.WriteToFile(properties.Select(property => property.Name).ToList(), false);
+    }
+
+    void ExportData()
+    {
+        var exportData = new List<string>();
+        PropertyInfo[] properties = typeof(IBoid).GetProperties();
+        foreach (var property in properties)
+        {
+            float sum = 0;
+            foreach (var boid in boids)
+            {
+                sum += (float)property.GetValue(boid);
+            }
+            exportData.Add((sum / boids.Length).ToString());
+        }
+        this.csvWriter.WriteToFile(exportData, true);
     }
 }
