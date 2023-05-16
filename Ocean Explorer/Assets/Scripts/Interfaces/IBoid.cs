@@ -9,7 +9,6 @@ public interface IBoid
     public float CohesionWeight { get; set; }
     public float SeparateWeight { get; set; }
     public float TargetWeight { get; set; }
-    public float BoundsRadius { get; set; }
     public float AvoidCollisionWeight { get; set; }
     public float CollisionAvoidDst { get; set; }
 }

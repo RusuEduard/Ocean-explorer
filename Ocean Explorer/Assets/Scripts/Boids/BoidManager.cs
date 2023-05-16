@@ -50,8 +50,6 @@ public class BoidManager : MonoBehaviour
             boid.Initialize();
             this.boids[i] = boid;
         }
-
-        InvokeRepeating("ExportData", 5f, 5f);
     }
 
     void Update()
@@ -144,7 +142,7 @@ public class BoidManager : MonoBehaviour
                         Vector3 offset = boidB.position - boids[i].position;
                         float sqrDst = (offset.x * offset.x + offset.y * offset.y + offset.z * offset.z) / 2;
 
-                        if (sqrDst < boids[i].PerceptionRadius)
+                        if (sqrDst <= boids[i].PerceptionRadius)
                         {
                             boids[i].numPerceivedFlockmates += 1;
                             boids[i].avgFlockHeading += boidB.forward;
@@ -165,6 +163,7 @@ public class BoidManager : MonoBehaviour
                     child.Initialize();
                     Destroy(boids[i].gameObject);
                     boids[i] = child;
+                    ExportData();
                 }
             }
         }
