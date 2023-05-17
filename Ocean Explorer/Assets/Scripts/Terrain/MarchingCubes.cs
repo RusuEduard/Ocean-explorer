@@ -12,7 +12,7 @@ public class MarchingCubes : MonoBehaviour
     //BEST VALUES FOR Density Scale = 0.05
     //Terrain Height = 0.579
 
-    int width = 64;
+    int width = 100;
     int height = 64;
 
     [SerializeField]
