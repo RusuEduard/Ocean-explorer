@@ -33,14 +33,18 @@ public class Boid : MonoBehaviour
 
     public bool isDead = false;
 
-    public void Initialize()
+    void Awake()
     {
         this.cachedTransform = this.transform;
+    }
+
+    public void Initialize(BoidSettings settings)
+    {
+        this.settings = settings;
+
         position = cachedTransform.position;
         forward = cachedTransform.forward;
-
-        this.settings.Initialize(Application.dataPath + "/data.csv");
-
+        
         float startSpeed = (this.settings.minSpeed + this.settings.maxSpeed) / 2;
         velocity = forward * startSpeed;
     }
@@ -55,22 +59,12 @@ public class Boid : MonoBehaviour
 
     public bool UpdateBoid()
     {
-        if (!this.isAlive)
-        {
-            return false;
-        }
-
         Vector3 acceleration = Vector3.zero;
-
-        if (target != null)
-        {
-            Vector3 offsetToTarget = (target.position - position);
-            acceleration = SteerTowards(offsetToTarget) * this.settings.targetWeight;
-        }
 
         if (numPerceivedFlockmates != 0)
         {
             centreOfFlockmates /= numPerceivedFlockmates;
+            avgFlockHeading /= numPerceivedFlockmates;
             Vector3 offsetToFlockmatesCenter = (centreOfFlockmates - position);
 
             var alignmentForce = SteerTowards(avgFlockHeading) * this.settings.alignWeight;
@@ -159,11 +153,11 @@ public class Boid : MonoBehaviour
 
     void OnCollisionEnter(Collision other)
     {
-        if (other.GetType() != this.GetType())
-        {
-            this.forward = new Vector3(0, 0, 0);
-            this.velocity = new Vector3(0, 0, 0);
-            this.isAlive = false;
-        }
+        // if (other.GetType() != this.GetType())
+        // {
+        //     this.forward = new Vector3(0, 0, 0);
+        //     this.velocity = new Vector3(0, 0, 0);
+        //     this.isAlive = false;
+        // }
     }
 }
