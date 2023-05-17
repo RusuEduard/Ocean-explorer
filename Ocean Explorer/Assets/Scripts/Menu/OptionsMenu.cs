@@ -1,19 +1,18 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Audio;
 
 public class OptionsMenu : MonoBehaviour
 {
-
+    public AudioMixer mixer;
     public Toggle fullScreenTog, vsyncTog;
-
     public List<ResItem> resolutions = new List<ResItem>();
-
     public TMP_Text resolutionLabel;
-
     private int selectedRes;
+    public Slider volumeSlider;
+
     void Start()
     {
         fullScreenTog.isOn = Screen.fullScreen;
@@ -83,6 +82,11 @@ public class OptionsMenu : MonoBehaviour
         QualitySettings.vSyncCount = vsyncTog.isOn ? 1 : 0;
 
         Screen.SetResolution(this.resolutions[selectedRes].horizontal, this.resolutions[selectedRes].vertical, fullScreenTog.isOn);
+    }
+
+    public void setVolume()
+    {
+        mixer.SetFloat("Volume", volumeSlider.value);
     }
 }
 
