@@ -9,6 +9,8 @@ public class MainMenu : MonoBehaviour
     public string openLevel;
     public string trainingLevel;
     public GameObject optionsMenu;
+    public GameObject resultsMenu;
+
     void Start()
     {
 
@@ -38,6 +40,16 @@ public class MainMenu : MonoBehaviour
     public void CloseOptions()
     {
         optionsMenu.SetActive(false);
+    }
+
+    public void OpenTrainingResults()
+    {
+        resultsMenu.SetActive(true);
+    }
+
+    public void CloseTrainingMenu()
+    {
+        resultsMenu.SetActive(false);
     }
 
     public void QuitGame()
