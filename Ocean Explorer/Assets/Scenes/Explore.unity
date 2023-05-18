@@ -717,6 +717,11 @@ MonoBehaviour:
   mainMenuScene: Menu
   pauseMenu: {fileID: 164531525}
   isPaused: 0
+--- !u!1 &780685099 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1504195855461248921, guid: 475a0c4b1b1b24748b99fd1330e36644, type: 3}
+  m_PrefabInstance: {fileID: 251614254}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &919926171
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -908,6 +913,48 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1504195855461248903, guid: 475a0c4b1b1b24748b99fd1330e36644, type: 3}
   m_PrefabInstance: {fileID: 251614254}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &988697759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 780685099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: 211a867f8f4516447b3093a81bb5990c, type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 21ea1242-87ba-4154-a0da-d6382978d06f
+    m_ActionName: Subway/Movement[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 17a91632-4683-4ef4-bd73-59f17b6c85ca
+    m_ActionName: Subway/Slow[/Keyboard/q]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 08500ff0-25f5-4729-9b67-437273fff15d
+    m_ActionName: Subway/Accelerate[/Keyboard/e]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Subway
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &1197303597
 GameObject:
   m_ObjectHideFlags: 0
