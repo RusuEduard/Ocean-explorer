@@ -165,7 +165,7 @@ public class Window_Graph : MonoBehaviour
 
             if (i % labelSpacerX == 0)
             {
-                CreateLabelX(xPosition, i.ToString());
+                CreateLabelX(xPosition, (i * 5).ToString());
                 CreateDashX(xPosition);
             }
 
@@ -250,17 +250,21 @@ public class Window_Graph : MonoBehaviour
         {
             Destroy(line);
         }
-
-        for (int i = 0; i < separatorCountX; i++)
+        foreach (var label in this.labelsX)
         {
-            Destroy(this.labelsX[i]);
-            Destroy(this.dashesX[i]);
+            Destroy(label);
         }
-
-        for (int i = 0; i < separatorCountY; i++)
+        foreach (var label in this.labelsY)
         {
-            Destroy(this.labelsY[i]);
-            Destroy(this.dashesY[i]);
+            Destroy(label);
+        }
+        foreach (var dash in this.dashesX)
+        {
+            Destroy(dash);
+        }
+        foreach (var dash in this.dashesY)
+        {
+            Destroy(dash);
         }
 
         this.points.Clear();

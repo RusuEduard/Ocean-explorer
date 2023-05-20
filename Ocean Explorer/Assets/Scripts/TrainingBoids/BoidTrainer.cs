@@ -54,6 +54,7 @@ public class BoidTrainer : MonoBehaviour
             boid.Initialize();
             this.boids[i] = boid;
         }
+        InvokeRepeating("ExportData", 0, 5);
     }
 
     void Update()
@@ -149,7 +150,6 @@ public class BoidTrainer : MonoBehaviour
                 child.Initialize();
                 Destroy(boids[i].gameObject);
                 boids[i] = child;
-                ExportData();
             }
         }
     }
