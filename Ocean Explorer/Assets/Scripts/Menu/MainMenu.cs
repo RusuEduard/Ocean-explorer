@@ -24,12 +24,12 @@ public class MainMenu : MonoBehaviour
 
     public void StartGame()
     {
-        SceneManager.LoadScene(openLevel);
+        Loader.Load(Loader.Scene.Explore);
     }
 
     public void StartTrainig()
     {
-        SceneManager.LoadScene(trainingLevel);
+        Loader.Load(Loader.Scene.Train);
     }
 
     public void OpenOptions()
