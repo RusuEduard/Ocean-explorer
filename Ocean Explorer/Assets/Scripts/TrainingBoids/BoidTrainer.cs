@@ -27,18 +27,6 @@ public class BoidTrainer : MonoBehaviour
             boid.transform.position = pos;
             boid.transform.forward = UnityEngine.Random.insideUnitSphere;
 
-            // boid.MinSpeed = 1;
-            // boid.MaxSpeed = 5;
-            // boid.PerceptionRadius = 5;
-            // boid.AvoidanceRadius = 5;
-            // boid.MaxSteerForce = 2;
-            // boid.AlignWeight = 1;
-            // boid.CohesionWeight = 1;
-            // boid.SeparateWeight = 1;
-            // boid.TargetWeight = 1;
-            // boid.AvoidCollisionWeight = 1;
-            // boid.CollisionAvoidDst = 5;
-
             boid.MinSpeed = UnityEngine.Random.Range(1, 5);
             boid.MaxSpeed = UnityEngine.Random.Range(5, 10);
             boid.PerceptionRadius = UnityEngine.Random.Range(5, 10);
@@ -48,7 +36,7 @@ public class BoidTrainer : MonoBehaviour
             boid.CohesionWeight = UnityEngine.Random.Range(0, 5);
             boid.SeparateWeight = UnityEngine.Random.Range(0, 5);
             boid.TargetWeight = UnityEngine.Random.Range(0, 5);
-            boid.AvoidCollisionWeight = UnityEngine.Random.Range(0, 5);
+            boid.AvoidCollisionWeight = UnityEngine.Random.Range(5, 10);
             boid.CollisionAvoidDst = UnityEngine.Random.Range(5, 15);
 
             boid.Initialize();
@@ -98,12 +86,12 @@ public class BoidTrainer : MonoBehaviour
 
     private TrainingBoid SelectParentBasedOnFitness(TrainingBoid[] boids)
     {
-        Int64 totalFitness = boids.Select(boid => boid.getFitness()).Sum();
+        var totalFitness = boids.Select(boid => boid.getFitness()).Sum();
         Debug.Log(totalFitness);
 
         var probability = UnityEngine.Random.Range(0, totalFitness);
 
-        long sum = 0;
+        var sum = 0f;
         for (int i = 0; i < generationSize; i++)
         {
             sum += boids[i].getFitness();
@@ -135,6 +123,7 @@ public class BoidTrainer : MonoBehaviour
                         boids[i].avgFlockHeading += boidB.forward;
                         boids[i].centreOfFlockmates += boidB.position;
 
+                        boids[i].AddFitness(1 / sqrDst);
                         if (sqrDst < boids[i].AvoidanceRadius)
                         {
                             boids[i].avgAvoidanceHeading -= offset / sqrDst;

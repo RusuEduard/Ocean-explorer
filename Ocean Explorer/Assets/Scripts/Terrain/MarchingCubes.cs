@@ -12,7 +12,7 @@ public class MarchingCubes : MonoBehaviour
     //BEST VALUES FOR Density Scale = 0.05
     //Terrain Height = 0.579
 
-    int width = 100;
+    public const int chunkSize = 240;
     int height = 64;
 
     [SerializeField]
@@ -46,7 +46,7 @@ public class MarchingCubes : MonoBehaviour
     private void Start()
     {
         meshFilter = GetComponent<MeshFilter>();
-        terrainMap = new float[width + 1, height + 1, width + 1];
+        terrainMap = new float[chunkSize + 1, height + 1, chunkSize + 1];
         PopulateTerrainMap();
         CreateMeshData();
 
@@ -69,11 +69,11 @@ public class MarchingCubes : MonoBehaviour
         ClearMeshData();
 
         // Loop through each "cube" in our terrain.
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < chunkSize; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                for (int z = 0; z < width; z++)
+                for (int z = 0; z < chunkSize; z++)
                 {
 
                     // Create an array of floats representing each corner of a cube and get the value from our terrainMap.
@@ -104,7 +104,7 @@ public class MarchingCubes : MonoBehaviour
             return 1;
         }
 
-        if (x == 0 || z == 0 || x == width || z == width)
+        if (x == 0 || z == 0 || x == chunkSize || z == chunkSize)
         {
             return -1;
         }
@@ -156,10 +156,10 @@ public class MarchingCubes : MonoBehaviour
     {
 
         // The data points for terrain are stored at the corners of our "cubes", so the terrainMap needs to be 1 larger
-        // than the width/height of our mesh.
-        for (int x = 0; x < width + 1; x++)
+        // than the chunkSize/height of our mesh.
+        for (int x = 0; x < chunkSize + 1; x++)
         {
-            for (int z = 0; z < width + 1; z++)
+            for (int z = 0; z < chunkSize + 1; z++)
             {
                 for (int y = 0; y < height + 1; y++)
                 {
