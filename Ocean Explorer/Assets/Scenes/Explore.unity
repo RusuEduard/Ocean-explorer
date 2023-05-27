@@ -545,6 +545,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32c5c9b2922576409e3f6a4f3ca738b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: d92cfe960589d4344bc4fecc96c19b79, type: 2}
+  gradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 0, b: 0, a: 1}
+    key1: {r: 0.9528302, g: 0.04045032, b: 0.8287886, a: 1}
+    key2: {r: 0.023584902, g: 0.036927808, b: 1, a: 1}
+    key3: {r: 0.02352941, g: 0.8671363, b: 1, a: 1}
+    key4: {r: 0.02352941, g: 1, b: 0.23265637, a: 0}
+    key5: {r: 1, g: 0.94886273, b: 0.02352941, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 1349
+    ctime1: 13107
+    ctime2: 26214
+    ctime3: 39321
+    ctime4: 52428
+    ctime5: 65535
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 14649
+    atime2: 27949
+    atime3: 65535
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 6
+    m_NumAlphaKeys: 4
   viewer: {fileID: 1006175157}
 --- !u!4 &534797965
 Transform:
@@ -837,7 +867,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9128401739440390529, guid: 418ed3ec693244e4aa1c7248657a27d5, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9128401739440390531, guid: 418ed3ec693244e4aa1c7248657a27d5, type: 3}
       propertyPath: m_RootOrder

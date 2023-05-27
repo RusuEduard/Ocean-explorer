@@ -1,4 +1,6 @@
+using System.Globalization;
 using System;
+using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +14,7 @@ public class MarchingCubes : MonoBehaviour
     //BEST VALUES FOR Density Scale = 0.05
     //Terrain Height = 0.579
 
-    public const int chunkSize = 240;
+    public const int chunkSize = 20;
     int height = 64;
 
     [SerializeField]
@@ -26,49 +28,109 @@ public class MarchingCubes : MonoBehaviour
 
     public int octaves = 2;
     public float worldYmax = 2f;
-    float[,,] terrainMap;
 
     public float yOffset;
 
     public Vector3 offset;
 
+    Queue<TerrainThreadInfo<TerrainData>> terrainDataThreadInfoQueue = new Queue<TerrainThreadInfo<TerrainData>>();
+
     public Gradient gradient;
-
-    float minTerrainHeight = float.MaxValue;
-    float maxTerrainHeight = float.MinValue;
-
-    List<Vector3> vertices = new List<Vector3>();
-    List<int> triangles = new List<int>();
 
     List<GameObject> allGameObjects = new List<GameObject>();
     List<Mesh> allMeshes = new List<Mesh>();
 
-    private void Start()
-    {
-        meshFilter = GetComponent<MeshFilter>();
-        terrainMap = new float[chunkSize + 1, height + 1, chunkSize + 1];
-        PopulateTerrainMap();
-        CreateMeshData();
+    // private void Start()
+    // {
+    //     meshFilter = GetComponent<MeshFilter>();
+    //     terrainMap = new float[chunkSize + 1, height + 1, chunkSize + 1];
+    //     PopulateTerrainMap();
+    //     CreateMeshData();
 
+    // }
+
+    // void Update()
+    // {
+    //     if (Input.GetKeyDown(KeyCode.G))
+    //     {
+    //         Debug.Log("Generating");
+    //         PopulateTerrainMap();
+    //         CreateMeshData();
+    //         Debug.Log("Generated");
+    //     }
+    // }
+
+    // void CreateMeshData()
+    // {
+
+    //     ClearMeshData();
+
+    //     // Loop through each "cube" in our terrain.
+    //     for (int x = 0; x < chunkSize; x++)
+    //     {
+    //         for (int y = 0; y < height; y++)
+    //         {
+    //             for (int z = 0; z < chunkSize; z++)
+    //             {
+
+    //                 // Create an array of floats representing each corner of a cube and get the value from our terrainMap.
+    //                 float[] cube = new float[8];
+    //                 for (int i = 0; i < 8; i++)
+    //                 {
+
+    //                     Vector3Int corner = new Vector3Int(x, y, z) + CornerTable[i];
+    //                     cube[i] = terrainMap[corner.x, corner.y, corner.z];
+
+    //                 }
+
+    //                 // Pass the value into our MarchCube function.
+    //                 MarchCube(new Vector3(x, y, z), cube);
+
+    //             }
+    //         }
+    //     }
+
+    //     BuildMesh();
+
+    // }
+
+    public void requestTerrainData(Vector3 position, Action<TerrainData> callback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            TerrainDataThread(position, callback);
+        };
+
+        new Thread(threadStart).Start();
     }
 
-    void Update()
+    void TerrainDataThread(Vector3 position, Action<TerrainData> callback)
     {
-        if (Input.GetKeyDown(KeyCode.G))
+        TerrainData terrainData = GetTerrainData(position);
+        lock (terrainDataThreadInfoQueue)
         {
-            Debug.Log("Generating");
-            PopulateTerrainMap();
-            CreateMeshData();
-            Debug.Log("Generated");
+            terrainDataThreadInfoQueue.Enqueue(new TerrainThreadInfo<TerrainData>(callback, terrainData));
         }
     }
 
-    void CreateMeshData()
+    private void Update()
     {
+        if (terrainDataThreadInfoQueue.Count > 0)
+        {
+            for (int i = 0; i < terrainDataThreadInfoQueue.Count; i++)
+            {
+                TerrainThreadInfo<TerrainData> threadInfo = terrainDataThreadInfoQueue.Dequeue();
+                threadInfo.callback(threadInfo.parameter);
+            }
+        }
+    }
 
-        ClearMeshData();
+    public TerrainData GetTerrainData(Vector3 position)
+    {
+        var terrainData = new TerrainData();
 
-        // Loop through each "cube" in our terrain.
+        var terrainMap = PopulateTerrainMap(position);
+
         for (int x = 0; x < chunkSize; x++)
         {
             for (int y = 0; y < height; y++)
@@ -87,76 +149,18 @@ public class MarchingCubes : MonoBehaviour
                     }
 
                     // Pass the value into our MarchCube function.
-                    MarchCube(new Vector3(x, y, z), cube);
-
+                    MarchCube(new Vector3(x, y, z), cube, ref terrainData, terrainMap, position);
                 }
             }
         }
 
-        BuildMesh();
-
+        return terrainData;
     }
 
-    float GetDensity(float x, float y, float z)
+    float[,,] PopulateTerrainMap(Vector3 position)
     {
-        if (y == 0)
-        {
-            return 1;
-        }
+        var terrainMap = new float[chunkSize + 1, height + 1, chunkSize + 1];
 
-        if (x == 0 || z == 0 || x == chunkSize || z == chunkSize)
-        {
-            return -1;
-        }
-
-        float density = 0;
-        float perlinValue = 0;
-
-        float sampleX = x / this.densityScale + offset.x;
-        float sampleY = y / this.densityScale + offset.y;
-        float sampleZ = z / this.densityScale + offset.z;
-
-        float perlinHeight = PerlinNoise3D(sampleX / 10, 0, sampleZ / 10);
-
-        perlinValue = PerlinNoise3D(sampleX / 10, sampleY / 10, sampleZ / 10);
-
-        for (int i = 2; i < octaves; i++)
-        {
-            perlinHeight += PerlinNoise3D(sampleX / (i * 5), 0, sampleZ / (i * 5)) * i / octaves;
-            perlinValue -= PerlinNoise3D(sampleX / i, sampleY / i, sampleZ / i) * i / octaves;
-        }
-
-        float mm = PerlinNoise3D((sampleX - 3.45f) / 50, 23 / 50, (sampleZ + 20.234f) / 50);
-        float caveX = (sampleX / 2 - 523.234f);
-        float caveY = (sampleY - 2.334f);
-        float caveZ = (sampleZ / 2 + 2023.234f);
-
-        float caves = PerlinNoise3D(caveX / 5, caveY / 5, caveZ / 5);
-
-        for (int i = 2; i < octaves; i++)
-        {
-            caves += PerlinNoise3D(caveX / (i * 2), caveY / (i * 2), caveZ / (i * 2)) * i / octaves;
-        }
-
-
-        if (Mathf.Abs(Mathf.Floor(caves * 50)) - 30 > 0)
-        {
-            caves = Mathf.Abs(caves * 10);
-        }
-        else
-        {
-            caves *= 0;
-        }
-
-        density = -sampleY + (perlinValue / 2 + perlinHeight) * worldYmax * mm - caves * Mathf.Abs(mm) + yOffset;
-        return density;
-    }
-
-    void PopulateTerrainMap()
-    {
-
-        // The data points for terrain are stored at the corners of our "cubes", so the terrainMap needs to be 1 larger
-        // than the chunkSize/height of our mesh.
         for (int x = 0; x < chunkSize + 1; x++)
         {
             for (int z = 0; z < chunkSize + 1; z++)
@@ -164,14 +168,16 @@ public class MarchingCubes : MonoBehaviour
                 for (int y = 0; y < height + 1; y++)
                 {
                     {
-                        terrainMap[x, y, z] = this.GetDensity(x, y, z);
+                        terrainMap[x, y, z] = this.GetDensity(x + position.x, y + position.y, z + position.z);
                     }
                 }
             }
         }
+
+        return terrainMap;
     }
 
-    void MarchCube(Vector3 position, float[] cube)
+    void MarchCube(Vector3 position, float[] cube, ref TerrainData terrainData, float[,,] terrainMap, Vector3 positionOffset)
     {
 
         // Get the configuration index of this cube.
@@ -198,28 +204,27 @@ public class MarchingCubes : MonoBehaviour
                 // Get the vertices for the start and end of this edge.
                 Vector3 vert1 = position + EdgeTable[indice, 0];
                 Vector3 vert2 = position + EdgeTable[indice, 1];
-                var value1 = this.terrainMap[(int)vert1.x, (int)vert1.y, (int)vert1.z];
-                var value2 = this.terrainMap[(int)vert2.x, (int)vert2.y, (int)vert2.z];
+                var value1 = terrainMap[(int)vert1.x, (int)vert1.y, (int)vert1.z];
+                var value2 = terrainMap[(int)vert2.x, (int)vert2.y, (int)vert2.z];
 
                 Vector3 newPosition = new Vector3(0, 0, 0);
 
                 var mu = (this.terrainHeight - value1) / (value2 - value1);
-                newPosition.x = vert1.x + mu * (vert2.x - vert1.x);
-                newPosition.y = vert1.y + mu * (vert2.y - vert1.y);
-                newPosition.z = vert1.z + mu * (vert2.z - vert1.z);
+                newPosition.x = vert1.x + mu * (vert2.x - vert1.x) + positionOffset.x;
+                newPosition.y = vert1.y + mu * (vert2.y - vert1.y) + positionOffset.y;
+                newPosition.z = vert1.z + mu * (vert2.z - vert1.z) + positionOffset.z;
 
                 // Add to our vertices and triangles list and incremement the edgeIndex.
-                vertices.Add(newPosition);
-                triangles.Add(vertices.Count - 1);
+                terrainData.AddVertice(newPosition);
                 edgeIndex++;
 
-                if (newPosition.y > this.maxTerrainHeight)
+                if (newPosition.y > terrainData.MaxHeight)
                 {
-                    this.maxTerrainHeight = newPosition.y;
+                    terrainData.MaxHeight = newPosition.y;
                 }
-                if (newPosition.y < this.minTerrainHeight)
+                if (newPosition.y < terrainData.MinHeight)
                 {
-                    this.minTerrainHeight = newPosition.y;
+                    terrainData.MinHeight = newPosition.y;
                 }
             }
         }
@@ -244,56 +249,25 @@ public class MarchingCubes : MonoBehaviour
 
     }
 
-    void ClearMeshData()
-    {
+    // void ClearMeshData()
+    // {
 
-        vertices.Clear();
-        triangles.Clear();
-        foreach (var gameObj in this.allGameObjects)
-        {
-            Destroy(gameObj);
-        }
-        foreach (var mesh in this.allMeshes)
-        {
-            Destroy(mesh);
-        }
-        this.allGameObjects.Clear();
-        this.allMeshes.Clear();
+    //     vertices.Clear();
+    //     triangles.Clear();
+    //     foreach (var gameObj in this.allGameObjects)
+    //     {
+    //         Destroy(gameObj);
+    //     }
+    //     foreach (var mesh in this.allMeshes)
+    //     {
+    //         Destroy(mesh);
+    //     }
+    //     this.allGameObjects.Clear();
+    //     this.allMeshes.Clear();
 
-    }
+    // }
 
-    void BuildMesh()
-    {
-        int requiredMeshes = this.vertices.Count / 65535 + (this.vertices.Count % 65535 == 0 ? 0 : 1);
-        for (int i = 0; i < requiredMeshes; i++)
-        {
-            Mesh mesh = new Mesh();
-            var meshVertices = this.vertices.GetRange(i * 65535, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
-            var colors = new Color[meshVertices.Length];
-            for (int j = 0; j < colors.Length; j++)
-            {
-                float height = Mathf.InverseLerp(minTerrainHeight, maxTerrainHeight, meshVertices[j].y);
-                colors[j] = gradient.Evaluate(height);
-            }
-            mesh.vertices = meshVertices;
-            mesh.triangles = Enumerable.Range(0, i == requiredMeshes - 1 ? this.vertices.Count % 65535 : 65535).ToArray();
-            mesh.colors = colors;
-            mesh.RecalculateNormals();
-            this.allMeshes.Add(mesh);
-        }
-        foreach (var mesh in this.allMeshes)
-        {
-            GameObject g = new GameObject("Terrain");
-            MeshFilter mf = g.AddComponent<MeshFilter>();//add mesh component
-            MeshRenderer mr = g.AddComponent<MeshRenderer>();//add mesh renderer component
-            MeshCollider mc = g.AddComponent<MeshCollider>();
-            mr.material = material;//set material to avoid evil pinkness of missing texture
-            mf.mesh = mesh;
-            mc.sharedMesh = mesh;
-            this.allGameObjects.Add(g);
-        }
 
-    }
 
     Vector3Int[] CornerTable = new Vector3Int[8] {
 
@@ -603,6 +577,110 @@ public class MarchingCubes : MonoBehaviour
     {
         return Mathf.Sin(Mathf.PI * Mathf.PerlinNoise(a, b));
     }
+    float GetDensity(float x, float y, float z)
+    {
+        if (y == 0)
+        {
+            return 1;
+        }
 
+        if (x == 0 || z == 0 || x == chunkSize || z == chunkSize)
+        {
+            return -1;
+        }
+
+        float density = 0;
+        float perlinValue = 0;
+
+        float sampleX = x / this.densityScale + offset.x;
+        float sampleY = y / this.densityScale + offset.y;
+        float sampleZ = z / this.densityScale + offset.z;
+
+        float perlinHeight = PerlinNoise3D(sampleX / 10, 0, sampleZ / 10);
+
+        perlinValue = PerlinNoise3D(sampleX / 10, sampleY / 10, sampleZ / 10);
+
+        for (int i = 2; i < octaves; i++)
+        {
+            perlinHeight += PerlinNoise3D(sampleX / (i * 5), 0, sampleZ / (i * 5)) * i / octaves;
+            perlinValue -= PerlinNoise3D(sampleX / i, sampleY / i, sampleZ / i) * i / octaves;
+        }
+
+        float mm = PerlinNoise3D((sampleX - 3.45f) / 50, 23 / 50, (sampleZ + 20.234f) / 50);
+        float caveX = (sampleX / 2 - 523.234f);
+        float caveY = (sampleY - 2.334f);
+        float caveZ = (sampleZ / 2 + 2023.234f);
+
+        float caves = PerlinNoise3D(caveX / 5, caveY / 5, caveZ / 5);
+
+        for (int i = 2; i < octaves; i++)
+        {
+            caves += PerlinNoise3D(caveX / (i * 2), caveY / (i * 2), caveZ / (i * 2)) * i / octaves;
+        }
+
+
+        if (Mathf.Abs(Mathf.Floor(caves * 50)) - 30 > 0)
+        {
+            caves = Mathf.Abs(caves * 10);
+        }
+        else
+        {
+            caves *= 0;
+        }
+
+        density = -sampleY + (perlinValue / 2 + perlinHeight) * worldYmax * mm - caves * Mathf.Abs(mm) + yOffset;
+        return density;
+    }
+
+    struct TerrainThreadInfo<T>
+    {
+        public readonly Action<T> callback;
+        public readonly T parameter;
+
+        public TerrainThreadInfo(Action<T> callback, T parameter)
+        {
+            this.callback = callback;
+            this.parameter = parameter;
+        }
+    }
 }
 
+
+public class TerrainData
+{
+    List<Vector3> vertices;
+    public float MaxHeight { get; set; }
+    public float MinHeight { get; set; }
+
+    public TerrainData()
+    {
+        this.vertices = new List<Vector3>();
+        MaxHeight = float.MinValue;
+        MinHeight = float.MaxValue;
+    }
+
+    public TerrainData(List<Vector3> vertices, float maxTerrainHeight, float minTerrainHeight)
+    {
+
+        this.vertices = vertices;
+        this.MaxHeight = maxTerrainHeight;
+        this.MinHeight = minTerrainHeight;
+    }
+
+    public void AddVertice(Vector3 vertice)
+    {
+        this.vertices.Add(vertice);
+    }
+
+
+
+    public int GetVerticesCount()
+    {
+        return this.vertices.Count();
+    }
+
+    public List<Vector3> GetVertices()
+    {
+        return this.vertices;
+    }
+}
