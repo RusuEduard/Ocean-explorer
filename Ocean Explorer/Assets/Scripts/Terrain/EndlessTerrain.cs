@@ -8,16 +8,12 @@ public class EndlessTerrain : MonoBehaviour
     public Gradient gradient;
     public const float maxViewDist = 100;
     public Transform viewer;
-
     public static Vector2 viewerPos;
     int chunkSize;
     int chunksVisibleInViewDst;
-
     Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
     static HashSet<TerrainChunk> terrainChunksVisibleLastUpdate = new HashSet<TerrainChunk>();
-
     static MarchingCubes mapGenerator;
-
 
     void Start()
     {
@@ -32,16 +28,16 @@ public class EndlessTerrain : MonoBehaviour
         updateVisibleChunks();
     }
 
-
-
     void updateVisibleChunks()
     {
-        // foreach (var chunk in terrainChunksVisibleLastUpdate)
-        // {
-        //     var distToChunk = Mathf.Sqrt(chunk.GetBounds().SqrDistance(viewerPos));
-        //     bool visible = distToChunk <= maxViewDist;
-        //     chunk.SetVisible(visible);
-        // }
+        foreach (var chunk in terrainChunksVisibleLastUpdate)
+        {
+            var distToChunk = Mathf.Sqrt(chunk.GetBounds().SqrDistance(viewerPos));
+            if (distToChunk > maxViewDist)
+            {
+                chunk.SetVisible(false);
+            }
+        }
 
         terrainChunksVisibleLastUpdate.RemoveWhere(x => !x.IsVisible());
 
@@ -82,6 +78,7 @@ public class EndlessTerrain : MonoBehaviour
         List<GameObject> allGameObjects;
         Transform parent;
         bool isVisible;
+
         public TerrainChunk(Vector2 coord, int size, Transform parent, Material mat, Gradient gradient)
         {
             position = coord * size;
@@ -125,11 +122,6 @@ public class EndlessTerrain : MonoBehaviour
 
         public void SetVisible(bool visible)
         {
-            if (this.isVisible == visible)
-            {
-                return;
-            }
-
             this.isVisible = visible;
             if (visible)
             {
@@ -154,12 +146,12 @@ public class EndlessTerrain : MonoBehaviour
         void OnMapDataReceived(TerrainData terrainData)
         {
             this.terrainData = terrainData;
-            this.BuildMesh();
+            this.UpdateTerrainChunk();
         }
 
         void BuildMesh()
         {
-            if (this.terrainData == null)
+            if (this.terrainData == null || this.allGameObjects.Count > 0 || this.allMeshes.Count > 0)
             {
                 return;
             }
@@ -172,7 +164,7 @@ public class EndlessTerrain : MonoBehaviour
                 var colors = new Color[meshVertices.Length];
                 for (int j = 0; j < colors.Length; j++)
                 {
-                    float height = Mathf.InverseLerp(this.terrainData.MinHeight, this.terrainData.MaxHeight, meshVertices[j].y);
+                    float height = Mathf.InverseLerp(0, mapGenerator.height, meshVertices[j].y);
                     colors[j] = gradient.Evaluate(height);
                 }
                 mesh.vertices = meshVertices;
@@ -184,10 +176,10 @@ public class EndlessTerrain : MonoBehaviour
             foreach (var mesh in this.allMeshes)
             {
                 GameObject g = new GameObject("Terrain Chunk");
-                MeshFilter mf = g.AddComponent<MeshFilter>();//add mesh component
-                MeshRenderer mr = g.AddComponent<MeshRenderer>();//add mesh renderer component
+                MeshFilter mf = g.AddComponent<MeshFilter>();
+                MeshRenderer mr = g.AddComponent<MeshRenderer>();
                 MeshCollider mc = g.AddComponent<MeshCollider>();
-                mr.material = material;//set material to avoid evil pinkness of missing texture
+                mr.material = material;
                 mf.mesh = mesh;
                 mc.sharedMesh = mesh;
                 g.transform.parent = this.parent;

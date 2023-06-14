@@ -11,7 +11,6 @@ public class TrainingBoid : MonoBehaviour, IBoid
     /// <summary>
     public float MinSpeed { get; set; }
     public float MaxSpeed { get; set; }
-    public float PerceptionRadius { get; set; }
     public float AvoidanceRadius { get; set; }
     public float MaxSteerForce { get; set; }
     public float AlignWeight { get; set; }
@@ -23,10 +22,11 @@ public class TrainingBoid : MonoBehaviour, IBoid
 
     [Header("Collisions")]
     public LayerMask obstacleMask;
-    public float collisionAvoidDst = 50f;
+    public float collisionAvoidDst = 10f;
     /// </summary>
 
     private float boundsRadius = 0.5f;
+    public float perceptionRadius = 5f;
 
     [HideInInspector]
     public Vector3 position;

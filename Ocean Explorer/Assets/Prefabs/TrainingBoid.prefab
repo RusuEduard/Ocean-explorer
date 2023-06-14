@@ -50,7 +50,7 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 1
-  collisionAvoidDst: 50
+  collisionAvoidDst: 10
   position: {x: 0, y: 0, z: 0}
   forward: {x: 0, y: 0, z: 0}
   velocity: {x: 0, y: 0, z: 0}

@@ -18,18 +18,22 @@ public class BoidTrainer : MonoBehaviour
     {
         this.csvWriter = new CsvWriter(Application.dataPath + "/data.csv");
         this.WriteCsvTitles();
+        InitPopulation(generationSize);
+        InvokeRepeating("ExportData", 0, 5);
+    }
 
+    void InitPopulation(int generationSize)
+    {
         this.boids = new TrainingBoid[generationSize];
         for (int i = 0; i < generationSize; i++)
         {
-            Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 15;
+            Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 5;
             TrainingBoid boid = Instantiate(prefab);
             boid.transform.position = pos;
             boid.transform.forward = UnityEngine.Random.insideUnitSphere;
 
             boid.MinSpeed = UnityEngine.Random.Range(1, 5);
             boid.MaxSpeed = UnityEngine.Random.Range(5, 10);
-            boid.PerceptionRadius = UnityEngine.Random.Range(5, 10);
             boid.AvoidanceRadius = UnityEngine.Random.Range(5, 10);
             boid.MaxSteerForce = UnityEngine.Random.Range(2, 8);
             boid.AlignWeight = UnityEngine.Random.Range(0, 5);
@@ -37,12 +41,11 @@ public class BoidTrainer : MonoBehaviour
             boid.SeparateWeight = UnityEngine.Random.Range(0, 5);
             boid.TargetWeight = UnityEngine.Random.Range(0, 5);
             boid.AvoidCollisionWeight = UnityEngine.Random.Range(5, 10);
-            boid.CollisionAvoidDst = UnityEngine.Random.Range(5, 15);
+            boid.CollisionAvoidDst = UnityEngine.Random.Range(2, 6);
 
             boid.Initialize();
             this.boids[i] = boid;
         }
-        InvokeRepeating("ExportData", 0, 5);
     }
 
     void Update()
@@ -50,25 +53,10 @@ public class BoidTrainer : MonoBehaviour
         updateBoids();
     }
 
-    private TrainingBoid[] GetNewGeneration(TrainingBoid[] previousGeneration)
-    {
-        var newGeneration = new TrainingBoid[generationSize];
-        for (int i = 0; i < generationSize; i++)
-        {
-            var firstParent = this.SelectParentBasedOnFitness(previousGeneration);
-            var secondParent = this.SelectParentBasedOnFitness(previousGeneration);
-            var child = this.GetOffspring(firstParent, secondParent);
-            child.Initialize();
-            newGeneration[i] = child;
-        }
-
-        return newGeneration;
-    }
-
     private TrainingBoid GetOffspring(TrainingBoid parent1, TrainingBoid parent2)
     {
         var child = Instantiate(prefab);
-        Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 15;
+        Vector3 pos = transform.position + UnityEngine.Random.insideUnitSphere * 5;
         child.transform.position = pos;
         child.transform.forward = UnityEngine.Random.insideUnitSphere;
 
@@ -87,7 +75,6 @@ public class BoidTrainer : MonoBehaviour
     private TrainingBoid SelectParentBasedOnFitness(TrainingBoid[] boids)
     {
         var totalFitness = boids.Select(boid => boid.getFitness()).Sum();
-        Debug.Log(totalFitness);
 
         var probability = UnityEngine.Random.Range(0, totalFitness);
 
@@ -115,15 +102,15 @@ public class BoidTrainer : MonoBehaviour
                 {
                     TrainingBoid boidB = boids[j];
                     Vector3 offset = boidB.position - boids[i].position;
-                    float sqrDst = (offset.x * offset.x + offset.y * offset.y + offset.z * offset.z) / 2;
+                    float sqrDst = Mathf.Sqrt(offset.x * offset.x + offset.y * offset.y + offset.z * offset.z);
 
-                    if (sqrDst <= boids[i].PerceptionRadius)
+                    if (sqrDst <= boids[i].perceptionRadius)
                     {
                         boids[i].numPerceivedFlockmates += 1;
                         boids[i].avgFlockHeading += boidB.forward;
                         boids[i].centreOfFlockmates += boidB.position;
 
-                        boids[i].AddFitness(1 / sqrDst);
+                        boids[i].AddFitness(20 / sqrDst);
                         if (sqrDst < boids[i].AvoidanceRadius)
                         {
                             boids[i].avgAvoidanceHeading -= offset / sqrDst;

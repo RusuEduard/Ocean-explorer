@@ -1,21 +1,13 @@
-using System.Globalization;
 using System;
 using System.Threading;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public class MarchingCubes : MonoBehaviour
 {
-
-    MeshFilter meshFilter;
-
-    //BEST VALUES FOR Density Scale = 0.05
-    //Terrain Height = 0.579
-
     public const int chunkSize = 20;
-    int height = 64;
+    public int height = 64;
 
     [SerializeField]
     [Range(0, 1)]
@@ -24,7 +16,6 @@ public class MarchingCubes : MonoBehaviour
     [SerializeField]
     float densityScale = 0.05f;
     [SerializeField]
-    Material material;
 
     public int octaves = 2;
     public float worldYmax = 2f;
@@ -34,65 +25,6 @@ public class MarchingCubes : MonoBehaviour
     public Vector3 offset;
 
     Queue<TerrainThreadInfo<TerrainData>> terrainDataThreadInfoQueue = new Queue<TerrainThreadInfo<TerrainData>>();
-
-    public Gradient gradient;
-
-    List<GameObject> allGameObjects = new List<GameObject>();
-    List<Mesh> allMeshes = new List<Mesh>();
-
-    // private void Start()
-    // {
-    //     meshFilter = GetComponent<MeshFilter>();
-    //     terrainMap = new float[chunkSize + 1, height + 1, chunkSize + 1];
-    //     PopulateTerrainMap();
-    //     CreateMeshData();
-
-    // }
-
-    // void Update()
-    // {
-    //     if (Input.GetKeyDown(KeyCode.G))
-    //     {
-    //         Debug.Log("Generating");
-    //         PopulateTerrainMap();
-    //         CreateMeshData();
-    //         Debug.Log("Generated");
-    //     }
-    // }
-
-    // void CreateMeshData()
-    // {
-
-    //     ClearMeshData();
-
-    //     // Loop through each "cube" in our terrain.
-    //     for (int x = 0; x < chunkSize; x++)
-    //     {
-    //         for (int y = 0; y < height; y++)
-    //         {
-    //             for (int z = 0; z < chunkSize; z++)
-    //             {
-
-    //                 // Create an array of floats representing each corner of a cube and get the value from our terrainMap.
-    //                 float[] cube = new float[8];
-    //                 for (int i = 0; i < 8; i++)
-    //                 {
-
-    //                     Vector3Int corner = new Vector3Int(x, y, z) + CornerTable[i];
-    //                     cube[i] = terrainMap[corner.x, corner.y, corner.z];
-
-    //                 }
-
-    //                 // Pass the value into our MarchCube function.
-    //                 MarchCube(new Vector3(x, y, z), cube);
-
-    //             }
-    //         }
-    //     }
-
-    //     BuildMesh();
-
-    // }
 
     public void requestTerrainData(Vector3 position, Action<TerrainData> callback)
     {
@@ -248,26 +180,6 @@ public class MarchingCubes : MonoBehaviour
         return configurationIndex;
 
     }
-
-    // void ClearMeshData()
-    // {
-
-    //     vertices.Clear();
-    //     triangles.Clear();
-    //     foreach (var gameObj in this.allGameObjects)
-    //     {
-    //         Destroy(gameObj);
-    //     }
-    //     foreach (var mesh in this.allMeshes)
-    //     {
-    //         Destroy(mesh);
-    //     }
-    //     this.allGameObjects.Clear();
-    //     this.allMeshes.Clear();
-
-    // }
-
-
 
     Vector3Int[] CornerTable = new Vector3Int[8] {
 
@@ -577,6 +489,7 @@ public class MarchingCubes : MonoBehaviour
     {
         return Mathf.Sin(Mathf.PI * Mathf.PerlinNoise(a, b));
     }
+
     float GetDensity(float x, float y, float z)
     {
         if (y == 0)
@@ -655,28 +568,11 @@ public class TerrainData
     public TerrainData()
     {
         this.vertices = new List<Vector3>();
-        MaxHeight = float.MinValue;
-        MinHeight = float.MaxValue;
-    }
-
-    public TerrainData(List<Vector3> vertices, float maxTerrainHeight, float minTerrainHeight)
-    {
-
-        this.vertices = vertices;
-        this.MaxHeight = maxTerrainHeight;
-        this.MinHeight = minTerrainHeight;
     }
 
     public void AddVertice(Vector3 vertice)
     {
         this.vertices.Add(vertice);
-    }
-
-
-
-    public int GetVerticesCount()
-    {
-        return this.vertices.Count();
     }
 
     public List<Vector3> GetVertices()

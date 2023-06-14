@@ -167,7 +167,7 @@ public class Window_Graph : MonoBehaviour
             }
             points.Add(circle);
 
-            if (valueList.Count >= this.separatorCountX)
+            if (labelSpacerX > 0)
             {
                 if (i % labelSpacerX == 0)
                 {
