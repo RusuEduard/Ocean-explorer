@@ -145,6 +145,10 @@ public class Window_Graph : MonoBehaviour
 
     private void ShowGraph(List<float> valueList)
     {
+        if (valueList == null || valueList.Count == 0)
+        {
+            return;
+        }
         float graphHeight = graphContainer.sizeDelta.y;
         float maxValue = valueList.Max();
         float minValue = valueList.Min();
@@ -163,12 +167,19 @@ public class Window_Graph : MonoBehaviour
             }
             points.Add(circle);
 
-            if (i % labelSpacerX == 0)
+            if (labelSpacerX > 0)
+            {
+                if (i % labelSpacerX == 0)
+                {
+                    CreateLabelX(xPosition, (i * 5).ToString());
+                    CreateDashX(xPosition);
+                }
+            }
+            else
             {
                 CreateLabelX(xPosition, (i * 5).ToString());
                 CreateDashX(xPosition);
             }
-
         }
 
         for (int i = 0; i < separatorCountY; i++)

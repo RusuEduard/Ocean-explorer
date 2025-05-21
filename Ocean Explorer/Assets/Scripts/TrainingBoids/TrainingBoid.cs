@@ -11,7 +11,6 @@ public class TrainingBoid : MonoBehaviour, IBoid
     /// <summary>
     public float MinSpeed { get; set; }
     public float MaxSpeed { get; set; }
-    public float PerceptionRadius { get; set; }
     public float AvoidanceRadius { get; set; }
     public float MaxSteerForce { get; set; }
     public float AlignWeight { get; set; }
@@ -23,10 +22,11 @@ public class TrainingBoid : MonoBehaviour, IBoid
 
     [Header("Collisions")]
     public LayerMask obstacleMask;
-    public float collisionAvoidDst = 50f;
+    public float collisionAvoidDst = 10f;
     /// </summary>
 
     private float boundsRadius = 0.5f;
+    public float perceptionRadius = 5f;
 
     [HideInInspector]
     public Vector3 position;
@@ -50,10 +50,12 @@ public class TrainingBoid : MonoBehaviour, IBoid
     Transform target;
     public bool isAlive = true;
 
-    private int fitness = 0;
+    private float fitness = 0f;
 
     protected float timer = 0;
-    private int delayAmount = 1;
+    private int delayAmount = 10;
+
+    private int collisionPenalty = 2;
 
     public void Initialize()
     {
@@ -73,9 +75,14 @@ public class TrainingBoid : MonoBehaviour, IBoid
         }
     }
 
-    public int getFitness()
+    public float getFitness()
     {
         return this.fitness;
+    }
+
+    public void AddFitness(float amount)
+    {
+        this.fitness += amount;
     }
 
     public bool UpdateBoid()
@@ -131,7 +138,6 @@ public class TrainingBoid : MonoBehaviour, IBoid
         {
             timer = 0f;
             this.fitness++;
-            this.fitness += numPerceivedFlockmates;
         }
 
         return this.isAlive;
@@ -194,11 +200,12 @@ public class TrainingBoid : MonoBehaviour, IBoid
             this.forward = new Vector3(0, 0, 0);
             this.velocity = new Vector3(0, 0, 0);
             this.isAlive = false;
-            this.fitness = 0;
+            this.fitness = 0f;
         }
         else
         {
-            this.fitness /= 2;
+            this.collisionPenalty *= collisionPenalty;
+            this.fitness /= collisionPenalty;
         }
     }
 }

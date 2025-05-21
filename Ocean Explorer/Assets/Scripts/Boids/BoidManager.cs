@@ -34,7 +34,7 @@ public class BoidManager : MonoBehaviour
                 {
                     Boid boidB = boids[j];
                     Vector3 offset = boidB.position - boids[i].position;
-                    float sqrDst = (offset.x * offset.x + offset.y * offset.y + offset.z * offset.z) / 2;
+                    float sqrDst = Mathf.Sqrt(offset.x * offset.x + offset.y * offset.y + offset.z * offset.z);
 
                     if (sqrDst <= settings.perceptionRadius)
                     {

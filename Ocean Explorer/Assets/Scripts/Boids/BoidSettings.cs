@@ -7,11 +7,11 @@ using System.Linq;
 [CreateAssetMenu]
 public class BoidSettings : ScriptableObject
 {
-    public float minSpeed = 2f;
+    public float minSpeed = 1f;
     public float maxSpeed = 5f;
-    public float perceptionRadius = 2.5f;
+    public float perceptionRadius = 5f;
     public float avoidanceRadius = 1f;
-    public float maxSteerForce = 20f;
+    public float maxSteerForce = 5f;
 
     public float alignWeight = 1f;
     public float cohesionWeight = 1f;
@@ -43,7 +43,6 @@ public class BoidSettings : ScriptableObject
 
         this.minSpeed = float.Parse(parsedData[(int)DataIndexingEnum.MIN_SPEED], CultureInfo.InvariantCulture.NumberFormat);
         this.maxSpeed = float.Parse(parsedData[(int)DataIndexingEnum.MAX_SPEED], CultureInfo.InvariantCulture.NumberFormat);
-        this.perceptionRadius = float.Parse(parsedData[(int)DataIndexingEnum.PERCEPTION_RADIUS], CultureInfo.InvariantCulture.NumberFormat);
         this.avoidanceRadius = float.Parse(parsedData[(int)DataIndexingEnum.AVOIDANCE_RADIUS], CultureInfo.InvariantCulture.NumberFormat);
         this.maxSteerForce = float.Parse(parsedData[(int)DataIndexingEnum.MAX_STEER_FORCE], CultureInfo.InvariantCulture.NumberFormat);
         this.alignWeight = float.Parse(parsedData[(int)DataIndexingEnum.ALIGN_WEIGHT], CultureInfo.InvariantCulture.NumberFormat);

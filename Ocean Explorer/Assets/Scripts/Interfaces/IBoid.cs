@@ -2,7 +2,6 @@ public interface IBoid
 {
     public float MinSpeed { get; set; }
     public float MaxSpeed { get; set; }
-    public float PerceptionRadius { get; set; }
     public float AvoidanceRadius { get; set; }
     public float MaxSteerForce { get; set; }
     public float AlignWeight { get; set; }
